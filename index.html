@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Price Floor Tutorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        
+        .dark {
+            color-scheme: dark;
+        }
+        
+        canvas {
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .dark canvas {
+            background: #2d3748;
+        }
+        
+        .btn-primary {
+            background: #5D5CDE;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #4c4bcc;
+            transform: translateY(-1px);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .card {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+        }
+        
+        .animate-bounce-gentle {
+            animation: bounce-gentle 1s ease-in-out infinite;
+        }
+        
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <!-- 語言切換按鈕 -->
+        <div class="flex justify-end mb-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-1 flex">
+                <button id="langCN" class="px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-primary text-white">
+                    中文
+                </button>
+                <button id="langEN" class="px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    English
+                </button>
+            </div>
+        </div>
+
+        <!-- 標題 -->
+        <div class="text-center mb-8">
+            <h1 id="mainTitle" class="text-3xl md:text-4xl font-bold mb-2 text-primary">價格下限互動教學</h1>
+            <p id="mainSubtitle" class="text-lg text-gray-600 dark:text-gray-400">觀察價格下限政策對市場的影響</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 控制面板 -->
+            <div class="lg:col-span-1">
+                <div class="card p-6">
+                    <h2 id="controlPanel" class="text-xl font-semibold mb-4 text-center">控制面板</h2>
+                    
+                    <!-- 價格下限調整 -->
+                    <div class="mb-6">
+                        <label id="priceFloorAdjustment" class="block text-sm font-medium mb-3">價格下限設定</label>
+                        <div class="space-y-3">
+                            <button id="effectiveFloor" class="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-lg w-full text-base font-medium transition-all duration-200">
+                                有效的價格下限
+                            </button>
+                            <button id="ineffectiveFloor" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full text-base font-medium transition-all duration-200">
+                                無效的價格下限
+                            </button>
+                            <button id="removeFloor" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full text-base font-medium transition-all duration-200">
+                                重設
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圖表區域 -->
+            <div class="lg:col-span-2">
+                <div class="card p-6">
+                    <div class="relative">
+                        <canvas id="economicsChart" width="600" height="400" class="w-full max-w-full"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 互動測驗區域 -->
+        <div class="mt-8 card p-6">
+            <h2 class="text-xl font-semibold mb-6 text-center">💭 互動測驗</h2>
+            
+            <!-- Question 1 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200" data-question-id="1">
+                    問題 1：有效的價格下限會對市場造成什麼影響？
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="1" data-answer="A">
+                        <span class="font-medium text-primary">A.</span> <span class="option-text">造成商品盈餘</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="1" data-answer="B">
+                        <span class="font-medium text-primary">B.</span> <span class="option-text">造成商品短缺</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="1" data-answer="C">
+                        <span class="font-medium text-primary">C.</span> <span class="option-text">對市場沒有影響</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="1" data-answer="D">
+                        <span class="font-medium text-primary">D.</span> <span class="option-text">提高市場效率</span>
+                    </button>
+                </div>
+                <div id="feedback-1" class="mt-4 p-4 rounded-lg hidden"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200" data-question-id="2">
+                    問題 2：什麼情況下價格下限是無效的？
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="2" data-answer="A">
+                        <span class="font-medium text-primary">A.</span> <span class="option-text">設定在均衡價格之上</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="2" data-answer="B">
+                        <span class="font-medium text-primary">B.</span> <span class="option-text">設定在均衡價格之下</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="2" data-answer="C">
+                        <span class="font-medium text-primary">C.</span> <span class="option-text">設定等於均衡價格</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="2" data-answer="D">
+                        <span class="font-medium text-primary">D.</span> <span class="option-text">由政府強制執行</span>
+                    </button>
+                </div>
+                <div id="feedback-2" class="mt-4 p-4 rounded-lg hidden"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200" data-question-id="3">
+                    問題 3：在有效價格下限下，實際交易量由什麼決定？
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="3" data-answer="A">
+                        <span class="font-medium text-primary">A.</span> <span class="option-text">需求量</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="3" data-answer="B">
+                        <span class="font-medium text-primary">B.</span> <span class="option-text">供給量</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="3" data-answer="C">
+                        <span class="font-medium text-primary">C.</span> <span class="option-text">政府規定</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="3" data-answer="D">
+                        <span class="font-medium text-primary">D.</span> <span class="option-text">均衡數量</span>
+                    </button>
+                </div>
+                <div id="feedback-3" class="mt-4 p-4 rounded-lg hidden"></div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200" data-question-id="4">
+                    問題 4：無效價格下限時，實際交易量會等於什麼？
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="4" data-answer="A">
+                        <span class="font-medium text-primary">A.</span> <span class="option-text">需求量</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="4" data-answer="B">
+                        <span class="font-medium text-primary">B.</span> <span class="option-text">供給量</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="4" data-answer="C">
+                        <span class="font-medium text-primary">C.</span> <span class="option-text">均衡數量</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="4" data-answer="D">
+                        <span class="font-medium text-primary">D.</span> <span class="option-text">以上皆是</span>
+                    </button>
+                </div>
+                <div id="feedback-4" class="mt-4 p-4 rounded-lg hidden"></div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200" data-question-id="5">
+                    問題 5：價格下限政策通常用於哪種情況？
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="5" data-answer="A">
+                        <span class="font-medium text-primary">A.</span> <span class="option-text">保護生產者免受低價格影響</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="5" data-answer="B">
+                        <span class="font-medium text-primary">B.</span> <span class="option-text">保護消費者利益</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="5" data-answer="C">
+                        <span class="font-medium text-primary">C.</span> <span class="option-text">增加政府收入</span>
+                    </button>
+                    <button class="quiz-option text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" 
+                            data-question="5" data-answer="D">
+                        <span class="font-medium text-primary">D.</span> <span class="option-text">減少市場競爭</span>
+                    </button>
+                </div>
+                <div id="feedback-5" class="mt-4 p-4 rounded-lg hidden"></div>
+            </div>
+        </div>
+
+        <!-- 說明區域 -->
+        <div class="mt-8 card p-6">
+            <h2 class="text-xl font-semibold mb-4">價格下限政策說明</h2>
+            
+            <!-- 互動說明 -->
+            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">📱 互動功能</h3>
+                <p class="text-sm text-blue-600 dark:text-blue-400">
+                    點擊按鈕設定不同的價格下限水準，觀察其對市場供需的影響。有效價格下限會造成盈餘，無效價格下限則不影響市場運作！
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div>
+                    <h3 class="font-semibold text-red-500 mb-2">有效價格下限的影響：</h3>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+                        <li>設定在均衡價格之上</li>
+                        <li>造成商品盈餘（供給量 > 需求量）</li>
+                        <li>可能需要政府收購過剩產品</li>
+                        <li>生產者受益但消費者負擔增加</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-green-500 mb-2">無效價格下限的影響：</h3>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+                        <li>設定在均衡價格之下</li>
+                        <li>市場仍在均衡點運作</li>
+                        <li>不影響實際交易價格</li>
+                        <li>政策形同虛設</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 深色模式設定
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // 經濟學圖表類
+        class PriceFloorChart {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                
+                // 價格下限設定
+                this.priceFloor = null; // null表示沒有價格下限
+                this.floorType = null; // 'effective' or 'ineffective'
+                
+                // 設定圖表邊距
+                this.margin = 60;
+                this.chartWidth = this.width - 2 * this.margin;
+                this.chartHeight = this.height - 2 * this.margin;
+                
+                // 拖動相關狀態
+                this.isDragging = false;
+                this.isHovering = false;
+                this.dragStartY = 0;
+                this.initialFloorPrice = 0;
+                
+                // 閃爍提示相關狀態
+                this.showBlinkingTip = false;
+                this.blinkingStartTime = 0;
+                this.blinkingDuration = 3000; // 3秒
+                
+                this.setupEventListeners();
+                this.setupInteractionListeners();
+                this.draw();
+            }
+            
+            setupEventListeners() {
+                // 響應式調整
+                const resizeCanvas = () => {
+                    const container = this.canvas.parentElement;
+                    const rect = container.getBoundingClientRect();
+                    
+                    // 檢測是否為手機設備
+                    const isMobile = window.innerWidth <= 768;
+                    const isPortrait = window.innerHeight > window.innerWidth;
+                    
+                    let scale;
+                    if (isMobile && isPortrait) {
+                        // 手機垂直模式：使用更大的最小縮放比例，確保圖表足夠大
+                        const containerScale = rect.width / 600;
+                        scale = Math.max(containerScale, 0.95); // 最小縮放比例為0.95（增大35%）
+                        scale = Math.min(scale, 1.6); // 最大縮放比例為1.6
+                    } else {
+                        // 桌面或平板模式：使用原來的邏輯
+                        scale = Math.min(rect.width / 600, 1);
+                    }
+                    
+                    this.canvas.style.transform = `scale(${scale})`;
+                    this.canvas.style.transformOrigin = 'top left';
+                    
+                    // 動態調整容器高度以適應縮放後的圖表
+                    if (isMobile && isPortrait) {
+                        const scaledHeight = 400 * scale;
+                        container.style.height = `${scaledHeight}px`;
+                        container.style.overflow = 'visible';
+                    } else {
+                        container.style.height = 'auto';
+                        container.style.overflow = 'hidden';
+                    }
+                };
+                
+                window.addEventListener('resize', resizeCanvas);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(resizeCanvas, 100); // 延遲執行以確保orientationchange完成
+                });
+                resizeCanvas();
+            }
+            
+            // 供給函數 (向上傾斜)
+            supplyFunction(quantity) {
+                return 5 + 0.05 * quantity;
+            }
+            
+            // 需求函數 (向下傾斜)
+            demandFunction(quantity) {
+                return 15 - 0.05 * quantity;
+            }
+            
+            // 計算均衡點
+            calculateEquilibrium() {
+                // 求解供需相等: 5 + 0.05 * Q = 15 - 0.05 * Q
+                // 0.1 * Q = 10
+                // Q = 100
+                const equilibriumQuantity = 100;
+                const equilibriumPrice = this.supplyFunction(equilibriumQuantity);
+                
+                return { quantity: equilibriumQuantity, price: equilibriumPrice };
+            }
+            
+            // 計算在價格下限下的供需量
+            calculateFloorEffect() {
+                if (!this.priceFloor) return null;
+                
+                // 在價格下限下的供給量和需求量
+                // 供給函數: P = 5 + 0.05Q => Q = (P - 5) / 0.05
+                // 需求函數: P = 15 - 0.05Q => Q = (15 - P) / 0.05
+                
+                const supplyQuantity = Math.max(0, (this.priceFloor - 5) / 0.05);
+                const demandQuantity = Math.max(0, (15 - this.priceFloor) / 0.05);
+                
+                return {
+                    supplyQuantity,
+                    demandQuantity,
+                    surplus: supplyQuantity - demandQuantity
+                };
+            }
+            
+            // 座標轉換
+            toCanvasX(quantity) {
+                return this.margin + (quantity / 200) * this.chartWidth;
+            }
+            
+            toCanvasY(price) {
+                return this.height - this.margin - ((price - 0) / 20) * this.chartHeight;
+            }
+            
+            draw() {
+                // 清除畫布
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                // 設定顏色（根據深色模式）
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#e2e8f0' : '#374151';
+                const gridColor = isDark ? '#4a5568' : '#d1d5db';
+                const axisColor = isDark ? '#718096' : '#6b7280';
+                
+                // 繪製座標軸
+                this.drawAxes(textColor, axisColor);
+                
+                // 繪製格線
+                this.drawGrid(gridColor);
+                
+                // 繪製供給曲線
+                this.drawSupplyCurve();
+                
+                // 繪製需求曲線
+                this.drawDemandCurve();
+                
+                // 繪製均衡點
+                this.drawEquilibrium();
+                
+                // 繪製價格下限
+                if (this.priceFloor !== null) {
+                    this.drawPriceFloor();
+                }
+                
+                // 繪製閃爍提示
+                if (this.showBlinkingTip) {
+                    this.drawBlinkingTip();
+                }
+            }
+            
+            drawAxes(textColor, axisColor) {
+                this.ctx.strokeStyle = axisColor;
+                this.ctx.lineWidth = 2;
+                this.ctx.font = '14px Noto Sans TC';
+                this.ctx.fillStyle = textColor;
+                
+                // X軸
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.margin, this.height - this.margin);
+                this.ctx.lineTo(this.width - this.margin, this.height - this.margin);
+                this.ctx.stroke();
+                
+                // Y軸
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.margin, this.margin);
+                this.ctx.lineTo(this.margin, this.height - this.margin);
+                this.ctx.stroke();
+                
+                // 軸標籤 - 根據語言顯示
+                const quantityLabel = currentLanguage === 'cn' ? '數量 (Quantity)' : 'Quantity';
+                const priceLabel = currentLanguage === 'cn' ? '價格 (Price)' : 'Price';
+                
+                // X軸標籤放在右方
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(quantityLabel, this.width - this.margin - 20, this.height - 20);
+                
+                // Y軸標籤放在頂部
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText(priceLabel, 15, 25);
+            }
+            
+            drawGrid(gridColor) {
+                this.ctx.strokeStyle = gridColor;
+                this.ctx.lineWidth = 0.3;
+                
+                // 垂直線 (淡化格線)
+                for (let q = 0; q <= 200; q += 50) {
+                    const x = this.toCanvasX(q);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, this.margin);
+                    this.ctx.lineTo(x, this.height - this.margin);
+                    this.ctx.stroke();
+                }
+                
+                // 水平線 (淡化格線)
+                for (let p = 0; p <= 20; p += 5) {
+                    const y = this.toCanvasY(p);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.margin, y);
+                    this.ctx.lineTo(this.width - this.margin, y);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawSupplyCurve() {
+                this.ctx.strokeStyle = '#ef4444';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                for (let q = 0; q <= 200; q += 1) {
+                    const price = this.supplyFunction(q);
+                    const x = this.toCanvasX(q);
+                    const y = this.toCanvasY(price);
+                    
+                    if (q === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                }
+                
+                this.ctx.stroke();
+                
+                // S 標籤 - 放在曲線末端右方，稍微高一點
+                const sEndQ = 190;
+                const sEndPrice = this.supplyFunction(sEndQ);
+                const sEndX = this.toCanvasX(sEndQ);
+                const sEndY = this.toCanvasY(sEndPrice);
+                
+                this.ctx.fillStyle = '#ef4444';
+                this.ctx.font = 'bold 18px Noto Sans TC';
+                this.ctx.fillText('S', sEndX + 10, sEndY - 8);
+            }
+            
+            drawDemandCurve() {
+                this.ctx.strokeStyle = '#3b82f6';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                for (let q = 0; q <= 200; q += 1) {
+                    const price = this.demandFunction(q);
+                    if (price < 0) continue;
+                    
+                    const x = this.toCanvasX(q);
+                    const y = this.toCanvasY(price);
+                    
+                    if (q === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                }
+                
+                this.ctx.stroke();
+                
+                // D 標籤 (在曲線末端右方)
+                const dEndQ = 200;
+                const dEndPrice = this.demandFunction(dEndQ);
+                if (dEndPrice > 0) {
+                    const dEndX = this.toCanvasX(dEndQ);
+                    const dEndY = this.toCanvasY(dEndPrice);
+                    
+                    this.ctx.fillStyle = '#3b82f6';
+                    this.ctx.font = 'bold 18px Noto Sans TC';
+                    this.ctx.fillText('D', dEndX + 10, dEndY + 5);
+                }
+            }
+            
+            drawEquilibrium() {
+                const eq = this.calculateEquilibrium();
+                const eqX = this.toCanvasX(eq.quantity);
+                const eqY = this.toCanvasY(eq.price);
+                
+                // 繪製均衡點的虛線到座標軸
+                this.ctx.strokeStyle = '#9ca3af';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([4, 4]);
+                
+                // P* 到Y軸的線
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.margin, eqY);
+                this.ctx.lineTo(eqX, eqY);
+                this.ctx.stroke();
+                
+                // Q* 到X軸的線
+                this.ctx.beginPath();
+                this.ctx.moveTo(eqX, eqY);
+                this.ctx.lineTo(eqX, this.height - this.margin);
+                this.ctx.stroke();
+                
+                this.ctx.setLineDash([]);
+                
+                // 繪製均衡點
+                this.ctx.fillStyle = '#6b7280';
+                this.ctx.strokeStyle = '#374151';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.arc(eqX, eqY, 7, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // P*, Q* 標籤
+                this.ctx.font = 'bold 14px Noto Sans TC';
+                this.ctx.fillStyle = '#9ca3af';
+                this.ctx.fillText('P*', this.margin - 25, eqY + 4);
+                this.ctx.fillText('Q*', eqX - 8, this.height - this.margin + 20);
+            }
+            
+            drawPriceFloor() {
+                const floorY = this.toCanvasY(this.priceFloor);
+                const equilibrium = this.calculateEquilibrium();
+                const floorEffect = this.calculateFloorEffect();
+                
+                // 繪製價格下限線
+                if (this.floorType === 'effective') {
+                    this.ctx.strokeStyle = '#92400e'; // 棕色實線 - 有效
+                    this.ctx.lineWidth = 4;
+                    this.ctx.setLineDash([]); // 實線
+                } else {
+                    this.ctx.strokeStyle = '#16a34a'; // 綠色虛線 - 無效
+                    this.ctx.lineWidth = 4;
+                    this.ctx.setLineDash([8, 8]); // 虛線
+                }
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.margin, floorY);
+                this.ctx.lineTo(this.width - this.margin, floorY);
+                this.ctx.stroke();
+                
+                this.ctx.setLineDash([]);
+                
+                // 價格下限標籤 - 根據語言顯示
+                this.ctx.font = 'bold 16px Noto Sans TC';
+                this.ctx.fillStyle = this.floorType === 'effective' ? '#92400e' : '#16a34a';
+                const floorLabel = currentLanguage === 'cn' ? '價格下限' : 'Price Floor';
+                this.ctx.fillText(floorLabel, this.width - this.margin - 100, floorY - 10);
+                
+                // 價格下限在Y軸顯示P1標籤
+                this.ctx.font = 'bold 14px Noto Sans TC';
+                this.ctx.fillStyle = this.floorType === 'effective' ? '#92400e' : '#16a34a';
+                this.ctx.fillText('P1', this.margin - 25, floorY + 4);
+                
+                // 如果是有效價格下限，顯示過剩效果
+                if (this.floorType === 'effective' && floorEffect) {
+                    const supplyX = this.toCanvasX(floorEffect.supplyQuantity);
+                    const demandX = this.toCanvasX(floorEffect.demandQuantity);
+                    
+                    // 繪製供給量點
+                    this.ctx.fillStyle = '#ef4444';
+                    this.ctx.strokeStyle = '#dc2626';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(supplyX, floorY, 6, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // 繪製需求量點
+                    this.ctx.fillStyle = '#3b82f6';
+                    this.ctx.strokeStyle = '#2563eb';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(demandX, floorY, 6, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // 繪製Qs和Qd到X軸的虛線
+                    this.ctx.strokeStyle = '#9ca3af';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.setLineDash([4, 4]);
+                    
+                    // Qs 到X軸的虛線
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(supplyX, floorY);
+                    this.ctx.lineTo(supplyX, this.height - this.margin);
+                    this.ctx.stroke();
+                    
+                    // Qd 到X軸的虛線
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(demandX, floorY);
+                    this.ctx.lineTo(demandX, this.height - this.margin);
+                    this.ctx.stroke();
+                    
+                    this.ctx.setLineDash([]);
+                    
+                    // Qs 和 Qd 標籤
+                    this.ctx.font = 'bold 12px Noto Sans TC';
+                    this.ctx.fillStyle = '#dc2626';
+                    this.ctx.fillText('Qs', supplyX - 8, this.height - this.margin + 15);
+                    this.ctx.fillStyle = '#2563eb';
+                    this.ctx.fillText('Qd', demandX - 8, this.height - this.margin + 15);
+                    
+                    // 在Qd和Qs之間繪製雙箭頭（棕色）- 注意順序變化
+                    const surplusMiddleX = (demandX + supplyX) / 2;
+                    const arrowY = this.height - this.margin + 45;
+                    
+                    this.ctx.strokeStyle = '#92400e'; // 棕色
+                    this.ctx.fillStyle = '#92400e'; // 棕色
+                    this.ctx.lineWidth = 2;
+                    
+                    // 繪製水平線
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(demandX + 10, arrowY);
+                    this.ctx.lineTo(supplyX - 10, arrowY);
+                    this.ctx.stroke();
+                    
+                    // 繪製左箭頭
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(demandX + 10, arrowY);
+                    this.ctx.lineTo(demandX + 18, arrowY - 4);
+                    this.ctx.lineTo(demandX + 18, arrowY + 4);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // 繪製右箭頭
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(supplyX - 10, arrowY);
+                    this.ctx.lineTo(supplyX - 18, arrowY - 4);
+                    this.ctx.lineTo(supplyX - 18, arrowY + 4);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // 在Qd和Qs之間顯示"過剩"（棕色，更大字體）
+                    this.ctx.font = 'bold 18px Noto Sans TC';
+                    this.ctx.fillStyle = '#92400e'; // 棕色
+                    this.ctx.textAlign = 'center';
+                    const surplusText = currentLanguage === 'cn' ? '盈餘' : 'Surplus';
+                    this.ctx.fillText(surplusText, surplusMiddleX, this.height - this.margin + 50);
+                    
+                    // 繪製橙色箭頭：從P*到P1
+                    const eqPrice = this.calculateEquilibrium().price;
+                    const eqY = this.toCanvasY(eqPrice);
+                    const arrowStartY = eqY - 10;
+                    const arrowEndY = floorY + 10;
+                    const arrowX = this.margin - 40;
+                    
+                    this.ctx.strokeStyle = '#f97316'; // 橙色
+                    this.ctx.fillStyle = '#f97316'; // 橙色
+                    this.ctx.lineWidth = 2;
+                    
+                    // 繪製垂直線（P*到P1）
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arrowX, arrowStartY);
+                    this.ctx.lineTo(arrowX, arrowEndY);
+                    this.ctx.stroke();
+                    
+                    // 繪製箭頭頭部（向上）
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arrowX, arrowEndY);
+                    this.ctx.lineTo(arrowX - 4, arrowEndY + 8);
+                    this.ctx.lineTo(arrowX + 4, arrowEndY + 8);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // 繪製橙色箭頭：從Q*到Qd
+                    const eqQuantity = this.calculateEquilibrium().quantity;
+                    const eqX = this.toCanvasX(eqQuantity);
+                    const arrowStartX = eqX - 10;
+                    const arrowEndX = demandX + 10;
+                    const arrowYpos = this.height - this.margin + 25;
+                    
+                    // 繪製水平線（Q*到Qd）
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arrowStartX, arrowYpos);
+                    this.ctx.lineTo(arrowEndX, arrowYpos);
+                    this.ctx.stroke();
+                    
+                    // 繪製箭頭頭部（向左）
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(arrowEndX, arrowYpos);
+                    this.ctx.lineTo(arrowEndX + 8, arrowYpos - 4);
+                    this.ctx.lineTo(arrowEndX + 8, arrowYpos + 4);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    this.ctx.textAlign = 'left';
+                } else {
+                    // 如果是無效價格下限，在供需線上顯示指向均衡點的三角箭頭
+                    const equilibrium = this.calculateEquilibrium();
+                    const eqX = this.toCanvasX(equilibrium.quantity);
+                    const eqY = this.toCanvasY(equilibrium.price);
+                    
+                    // 計算價格下限線與供給線和需求線的交點
+                    const floorPrice = this.priceFloor;
+                    
+                    // 供給線在價格下限處的數量
+                    const supplyQuantityAtFloor = Math.max(0, (floorPrice - 5) / 0.05);
+                    const supplyX = this.toCanvasX(supplyQuantityAtFloor);
+                    
+                    // 需求線在價格下限處的數量
+                    const demandQuantityAtFloor = Math.max(0, (15 - floorPrice) / 0.05);
+                    const demandX = this.toCanvasX(demandQuantityAtFloor);
+                    
+                    // 在供給線上繪製紅色三角箭頭指向均衡點
+                    this.ctx.fillStyle = '#ef4444'; // 紅色，與供給線顏色一致
+                    
+                    // 計算供給線上箭頭的位置（在價格下限線和均衡點之間）
+                    const supplyArrowX = (supplyX + eqX) / 2;
+                    const supplyArrowY = (floorY + eqY) / 2;
+                    
+                    // 計算指向均衡點的方向
+                    const supplyDx = eqX - supplyArrowX;
+                    const supplyDy = eqY - supplyArrowY;
+                    const supplyAngle = Math.atan2(supplyDy, supplyDx);
+                    
+                    // 繪製供給線上的紅色三角箭頭
+                    const arrowSize = 12;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(
+                        supplyArrowX + arrowSize * Math.cos(supplyAngle),
+                        supplyArrowY + arrowSize * Math.sin(supplyAngle)
+                    );
+                    this.ctx.lineTo(
+                        supplyArrowX + arrowSize * Math.cos(supplyAngle - 2.5),
+                        supplyArrowY + arrowSize * Math.sin(supplyAngle - 2.5)
+                    );
+                    this.ctx.lineTo(
+                        supplyArrowX + arrowSize * Math.cos(supplyAngle + 2.5),
+                        supplyArrowY + arrowSize * Math.sin(supplyAngle + 2.5)
+                    );
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // 在需求線上繪製藍色三角箭頭指向均衡點
+                    this.ctx.fillStyle = '#3b82f6'; // 藍色，與需求線顏色一致
+                    
+                    // 計算需求線上箭頭的位置（在價格下限線和均衡點之間）
+                    const demandArrowX = (demandX + eqX) / 2;
+                    const demandArrowY = (floorY + eqY) / 2;
+                    
+                    // 計算指向均衡點的方向
+                    const demandDx = eqX - demandArrowX;
+                    const demandDy = eqY - demandArrowY;
+                    const demandAngle = Math.atan2(demandDy, demandDx);
+                    
+                    // 繪製需求線上的藍色三角箭頭
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(
+                        demandArrowX + arrowSize * Math.cos(demandAngle),
+                        demandArrowY + arrowSize * Math.sin(demandAngle)
+                    );
+                    this.ctx.lineTo(
+                        demandArrowX + arrowSize * Math.cos(demandAngle - 2.5),
+                        demandArrowY + arrowSize * Math.sin(demandAngle - 2.5)
+                    );
+                    this.ctx.lineTo(
+                        demandArrowX + arrowSize * Math.cos(demandAngle + 2.5),
+                        demandArrowY + arrowSize * Math.sin(demandAngle + 2.5)
+                    );
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // 添加文字說明
+                    this.ctx.font = 'bold 14px Noto Sans TC';
+                    this.ctx.fillStyle = '#16a34a';
+                    this.ctx.textAlign = 'center';
+                    const equilibriumText = currentLanguage === 'cn' ? '回到均衡' : 'Returns to Equilibrium';
+                    this.ctx.fillText(equilibriumText, eqX, eqY - 20);
+                    
+                    this.ctx.textAlign = 'left';
+                }
+            }
+            
+            setEffectiveFloor() {
+                const equilibrium = this.calculateEquilibrium();
+                this.priceFloor = equilibrium.price + 2; // 設定在均衡價格上方
+                this.floorType = 'effective';
+                this.animateDraw();
+            }
+            
+            setIneffectiveFloor() {
+                const equilibrium = this.calculateEquilibrium();
+                this.priceFloor = equilibrium.price - 2; // 設定在均衡價格下方
+                this.floorType = 'ineffective';
+                this.animateDraw();
+            }
+            
+            removeFloor() {
+                this.priceFloor = null;
+                this.floorType = null;
+                this.animateDraw();
+            }
+            
+            animateDraw() {
+                // 簡單的重繪動畫
+                this.canvas.style.transform += ' scale(1.02)';
+                setTimeout(() => {
+                    this.canvas.style.transform = this.canvas.style.transform.replace(' scale(1.02)', '');
+                    this.draw();
+                }, 100);
+                
+                this.draw();
+            }
+            
+            // 顯示閃爍提示
+            showDragTip() {
+                if (this.priceFloor !== null) {
+                    this.showBlinkingTip = true;
+                    this.blinkingStartTime = Date.now();
+                    
+                    // 啟動動畫循環
+                    this.animateBlinking();
+                }
+            }
+            
+            // 閃爍動畫循環
+            animateBlinking() {
+                if (!this.showBlinkingTip) return;
+                
+                // 移除時間限制，持續閃爍直到學生拖動
+                this.draw();
+                
+                if (this.showBlinkingTip) {
+                    requestAnimationFrame(() => this.animateBlinking());
+                }
+            }
+            
+            // 繪製閃爍提示
+            drawBlinkingTip() {
+                if (!this.priceFloor) return;
+                
+                const elapsed = Date.now() - this.blinkingStartTime;
+                const cycle = 800; // 閃爍週期 800ms
+                const progress = (elapsed % cycle) / cycle;
+                const opacity = 0.3 + 0.7 * Math.abs(Math.sin(progress * Math.PI * 2));
+                
+                const floorY = this.toCanvasY(this.priceFloor);
+                
+                // 根據下限類型選擇顏色 - 有效用棕色，無效用綠色
+                const blinkColor = this.floorType === 'effective' ? '146, 64, 14' : '22, 163, 74';
+                
+                // 繪製閃爍框
+                this.ctx.strokeStyle = `rgba(${blinkColor}, ${opacity})`;
+                this.ctx.lineWidth = 3;
+                this.ctx.setLineDash([5, 5]);
+                
+                const boxMargin = 15;
+                this.ctx.strokeRect(
+                    this.margin - boxMargin,
+                    floorY - boxMargin,
+                    this.chartWidth + 2 * boxMargin,
+                    2 * boxMargin
+                );
+                
+                this.ctx.setLineDash([]);
+                
+                // 繪製提示文字
+                this.ctx.fillStyle = `rgba(${blinkColor}, ${opacity})`;
+                this.ctx.font = 'bold 14px Noto Sans TC';
+                this.ctx.textAlign = 'center';
+                
+                const tipText = currentLanguage === 'cn' ? '拖動此線條調整價格下限 ↕️' : 'Drag this line to adjust price floor ↕️';
+                this.ctx.fillText(tipText, this.width / 2, floorY - 25);
+                
+                this.ctx.textAlign = 'left';
+            }
+            
+            // 設置拖動監聽器
+            setupInteractionListeners() {
+                // 滑鼠事件
+                this.canvas.addEventListener('mousedown', (e) => this.handleStart(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.handleEnd(e));
+                this.canvas.addEventListener('mouseleave', (e) => this.handleEnd(e));
+                
+                // 觸控事件
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleStart(e.touches[0]);
+                });
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.handleMove(e.touches[0]);
+                });
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleEnd(e);
+                });
+                
+                // 改變游標樣式
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging) {
+                        this.updateCursor(e);
+                    }
+                });
+            }
+            
+            // 獲取滑鼠/觸控位置
+            getEventPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+            
+            // 檢查是否在價格下限線附近
+            isNearPriceFloor(pos) {
+                if (this.priceFloor === null) return false;
+                
+                const tolerance = 15; // 容許的距離
+                const floorY = this.toCanvasY(this.priceFloor);
+                
+                // 檢查是否在圖表範圍內
+                if (pos.x < this.margin || pos.x > this.width - this.margin) return false;
+                if (pos.y < this.margin || pos.y > this.height - this.margin) return false;
+                
+                // 檢查是否在價格下限線附近
+                return Math.abs(pos.y - floorY) < tolerance;
+            }
+            
+            // 處理開始拖動
+            handleStart(e) {
+                const pos = this.getEventPos(e);
+                
+                if (this.isNearPriceFloor(pos)) {
+                    this.isDragging = true;
+                    this.dragStartY = pos.y;
+                    this.initialFloorPrice = this.priceFloor;
+                    this.canvas.style.cursor = 'grabbing';
+                    
+                    // 學生開始拖動時停止閃爍提示
+                    this.showBlinkingTip = false;
+                }
+            }
+            
+            // 處理拖動移動
+            handleMove(e) {
+                const pos = this.getEventPos(e);
+                
+                if (this.isDragging) {
+                    // 計算垂直移動距離
+                    const deltaY = this.dragStartY - pos.y; // 向上為正
+                    const priceChange = (deltaY / this.chartHeight) * 20; // 轉換為價格單位
+                    
+                    // 更新價格下限，限制在合理範圍內 (1-19)
+                    this.priceFloor = Math.max(1, Math.min(19, this.initialFloorPrice + priceChange));
+                    
+                    // 檢查是否仍為有效價格下限
+                    const equilibrium = this.calculateEquilibrium();
+                    if (this.priceFloor <= equilibrium.price) {
+                        this.floorType = 'ineffective';
+                    } else {
+                        this.floorType = 'effective';
+                    }
+                    
+                    // 實時重繪
+                    this.draw();
+                }
+            }
+            
+            // 處理結束拖動
+            handleEnd(e) {
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+            
+            // 更新游標樣式
+            updateCursor(e) {
+                const pos = this.getEventPos(e);
+                
+                if (this.isNearPriceFloor(pos)) {
+                    this.canvas.style.cursor = 'grab';
+                    this.isHovering = true;
+                } else {
+                    this.canvas.style.cursor = 'default';
+                    this.isHovering = false;
+                }
+            }
+        }
+
+        // 語言切換功能
+        let currentLanguage = 'cn';
+        
+        const translations = {
+            cn: {
+                mainTitle: '價格下限互動教學',
+                mainSubtitle: '觀察價格下限政策對市場的影響',
+                controlPanel: '控制面板',
+                priceFloorAdjustment: '價格下限設定',
+                effectiveFloor: '有效的價格下限',
+                ineffectiveFloor: '無效的價格下限',
+                removeFloor: '重設',
+                chartTitle: '價格下限效果圖',
+                interactiveQuiz: '💭 互動測驗',
+                conceptTitle: '價格下限政策說明',
+                interactiveFeature: '📱 互動功能',
+                interactiveDesc: '點擊按鈕設定不同的價格下限水準，觀察其對市場供需的影響。有效價格下限會造成盈餘，無效價格下限則不影響市場運作！',
+                effectiveFloorTitle: '有效價格下限的影響：',
+                effectiveFloorEffects: [
+                    '設定在均衡價格之上',
+                    '造成商品盈餘（供給量 > 需求量）',
+                    '可能需要政府收購過剩產品',
+                    '生產者受益但消費者負擔增加'
+                ],
+                ineffectiveFloorTitle: '無效價格下限的影響：',
+                ineffectiveFloorEffects: [
+                    '設定在均衡價格之下',
+                    '市場仍在均衡點運作',
+                    '不影響實際交易價格',
+                    '政策形同虛設'
+                ],
+                questions: {
+                    '1': {
+                        text: '問題 1：有效的價格下限會對市場造成什麼影響？',
+                        options: {
+                            'A': '造成商品過剩',
+                            'B': '造成商品短缺',
+                            'C': '對市場沒有影響',
+                            'D': '提高市場效率'
+                        }
+                    },
+                    '2': {
+                        text: '問題 2：什麼情況下價格下限是無效的？',
+                        options: {
+                            'A': '設定在均衡價格之上',
+                            'B': '設定在均衡價格之下',
+                            'C': '設定等於均衡價格',
+                            'D': '由政府強制執行'
+                        }
+                    },
+                    '3': {
+                        text: '問題 3：在有效價格下限下，實際交易量由什麼決定？',
+                        options: {
+                            'A': '需求量',
+                            'B': '供給量',
+                            'C': '政府規定',
+                            'D': '均衡數量'
+                        }
+                    },
+                    '4': {
+                        text: '問題 4：無效價格下限時，實際交易量會等於什麼？',
+                        options: {
+                            'A': '需求量',
+                            'B': '供給量',
+                            'C': '均衡數量',
+                            'D': '以上皆是'
+                        }
+                    },
+                    '5': {
+                        text: '問題 5：價格下限政策通常用於哪種情況？',
+                        options: {
+                            'A': '保護生產者免受低價格影響',
+                            'B': '保護消費者利益',
+                            'C': '增加政府收入',
+                            'D': '減少市場競爭'
+                        }
+                    }
+                },
+                explanations: {
+                    '1': {
+                        'A': '✅ 正確！有效的價格下限設定在均衡價格之上，會使供給量大於需求量，造成商品盈餘。',
+                        'B': '❌ 錯誤。價格下限會提高價格，導致供給過多而非短缺。',
+                        'C': '❌ 錯誤。有效的價格下限會明顯影響市場運作。',
+                        'D': '❌ 錯誤。價格下限通常會降低市場效率，造成資源配置不當。'
+                    },
+                    '2': {
+                        'A': '❌ 錯誤。設定在均衡價格之上的價格下限是有效的。',
+                        'B': '✅ 正確！當價格下限設定在均衡價格之下時，市場價格不會觸及下限，因此政策無效。',
+                        'C': '❌ 錯誤。設定等於均衡價格的下限處於臨界狀態。',
+                        'D': '❌ 錯誤。政府執行力度不影響下限的有效性，關鍵在於設定水準。'
+                    },
+                    '3': {
+                        'A': '✅ 正確！在有效價格下限下，需求量小於供給量，因此實際交易量由較小的需求量決定。',
+                        'B': '❌ 錯誤。雖然供給量較高，但實際交易受需求限制。',
+                        'C': '❌ 錯誤。政府只設定價格下限，不直接決定交易量。',
+                        'D': '❌ 錯誤。有效價格下限下無法達到原均衡數量。'
+                    },
+                    '4': {
+                        'A': '❌ 錯誤。在無效價格下限下，交易不僅等於需求量，也等於供給量和均衡數量。',
+                        'B': '❌ 錯誤。在無效價格下限下，交易不僅等於供給量，也等於需求量和均衡數量。',
+                        'C': '❌ 錯誤。在無效價格下限下，交易不僅等於均衡數量，也等於需求量和供給量。',
+                        'D': '✅ 正確！無效價格下限設定在均衡價格之下時，市場仍在均衡點運作，因此需求量=供給量=均衡數量，實際交易等於三者。'
+                    },
+                    '5': {
+                        'A': '✅ 正確！價格下限政策主要目的是保護生產者，防止價格過低，如農產品價格保護、最低工資等。',
+                        'B': '❌ 錯誤。價格下限對消費者不利，會增加他們的支出。',
+                        'C': '❌ 錯誤。價格下限不是為了增加政府收入。',
+                        'D': '❌ 錯誤。價格下限的目的不是減少競爭。'
+                    }
+                }
+            },
+            en: {
+                mainTitle: 'Interactive Price Floor Tutorial',
+                mainSubtitle: 'Observe how price floor policies affect the market',
+                controlPanel: 'Control Panel',
+                priceFloorAdjustment: 'Price Floor Settings',
+                effectiveFloor: 'Effective Price Floor',
+                ineffectiveFloor: 'Ineffective Price Floor',
+                removeFloor: 'Reset',
+                chartTitle: 'Price Floor Effects Chart',
+                interactiveQuiz: '💭 Interactive Quiz',
+                conceptTitle: 'Price Floor Policy Explanation',
+                interactiveFeature: '📱 Interactive Features',
+                interactiveDesc: 'Click buttons to set different price floor levels and observe their effects on market supply and demand. Effective price floors create surplus, while ineffective ones don\'t affect market operations!',
+                effectiveFloorTitle: 'Effects of Effective Price Floor:',
+                effectiveFloorEffects: [
+                    'Set above equilibrium price',
+                    'Creates surplus (quantity supplied > quantity demanded)',
+                    'May require government purchase of surplus',
+                    'Producers benefit but consumer burden increases'
+                ],
+                ineffectiveFloorTitle: 'Effects of Ineffective Price Floor:',
+                ineffectiveFloorEffects: [
+                    'Set below equilibrium price',
+                    'Market continues at equilibrium',
+                    'No effect on actual trading price',
+                    'Policy becomes meaningless'
+                ],
+                questions: {
+                    '1': {
+                        text: 'Question 1: What effect does an effective price floor have on the market?',
+                        options: {
+                            'A': 'Creates surplus',
+                            'B': 'Creates shortage',
+                            'C': 'No effect on market',
+                            'D': 'Improves market efficiency'
+                        }
+                    },
+                    '2': {
+                        text: 'Question 2: When is a price floor ineffective?',
+                        options: {
+                            'A': 'Set above equilibrium price',
+                            'B': 'Set below equilibrium price',
+                            'C': 'Set equal to equilibrium price',
+                            'D': 'Enforced by government'
+                        }
+                    },
+                    '3': {
+                        text: 'Question 3: Under an effective price floor, what determines actual trading quantity?',
+                        options: {
+                            'A': 'Quantity demanded',
+                            'B': 'Quantity supplied',
+                            'C': 'Government regulation',
+                            'D': 'Equilibrium quantity'
+                        }
+                    },
+                    '4': {
+                        text: 'Question 4: Under an ineffective price floor, actual transactions equal what?',
+                        options: {
+                            'A': 'Quantity demanded',
+                            'B': 'Quantity supplied',
+                            'C': 'Equilibrium quantity',
+                            'D': 'All of the above'
+                        }
+                    },
+                    '5': {
+                        text: 'Question 5: Price floor policies are typically used for what purpose?',
+                        options: {
+                            'A': 'Protect producers from low prices',
+                            'B': 'Protect consumer interests',
+                            'C': 'Increase government revenue',
+                            'D': 'Reduce market competition'
+                        }
+                    }
+                },
+                explanations: {
+                    '1': {
+                        'A': '✅ Correct! An effective price floor set above equilibrium price causes quantity supplied to exceed quantity demanded, creating a surplus.',
+                        'B': '❌ Incorrect. Price floors increase prices, leading to excess supply rather than shortage.',
+                        'C': '❌ Incorrect. Effective price floors significantly affect market operations.',
+                        'D': '❌ Incorrect. Price floors typically reduce market efficiency and cause resource misallocation.'
+                    },
+                    '2': {
+                        'A': '❌ Incorrect. A price floor set above equilibrium price is effective.',
+                        'B': '✅ Correct! When a price floor is set below equilibrium price, market price won\'t touch the floor, making the policy ineffective.',
+                        'C': '❌ Incorrect. A floor equal to equilibrium price is at the critical threshold.',
+                        'D': '❌ Incorrect. Government enforcement doesn\'t affect floor effectiveness; the key is the setting level.'
+                    },
+                    '3': {
+                        'A': '✅ Correct! Under an effective price floor, quantity demanded is less than quantity supplied, so actual trading quantity is determined by the smaller demand quantity.',
+                        'B': '❌ Incorrect. Although quantity supplied is higher, actual trading is limited by demand.',
+                        'C': '❌ Incorrect. Government only sets the price floor, not directly determining trading quantity.',
+                        'D': '❌ Incorrect. Under effective price floor, original equilibrium quantity cannot be achieved.'
+                    },
+                    '4': {
+                        'A': '❌ Incorrect. Under an ineffective price floor, transactions equal not only quantity demanded, but also quantity supplied and equilibrium quantity.',
+                        'B': '❌ Incorrect. Under an ineffective price floor, transactions equal not only quantity supplied, but also quantity demanded and equilibrium quantity.',
+                        'C': '❌ Incorrect. Under an ineffective price floor, transactions equal not only equilibrium quantity, but also quantity demanded and quantity supplied.',
+                        'D': '✅ Correct! Under an ineffective price floor set below equilibrium price, the market continues to operate at equilibrium, so quantity demanded = quantity supplied = equilibrium quantity, and actual transactions equal all three.'
+                    },
+                    '5': {
+                        'A': '✅ Correct! Price floor policies mainly aim to protect producers by preventing excessively low prices, such as agricultural price supports and minimum wage laws.',
+                        'B': '❌ Incorrect. Price floors disadvantage consumers by increasing their expenses.',
+                        'C': '❌ Incorrect. Price floors are not designed to increase government revenue.',
+                        'D': '❌ Incorrect. The purpose of price floors is not to reduce competition.'
+                    }
+                }
+            }
+        };
+        
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            // 更新主要內容
+            document.getElementById('mainTitle').textContent = t.mainTitle;
+            document.getElementById('mainSubtitle').textContent = t.mainSubtitle;
+            
+            // 更新控制面板
+            updateTextContent('controlPanel', t.controlPanel);
+            updateTextContent('priceFloorAdjustment', t.priceFloorAdjustment);
+            updateButtonText('effectiveFloor', t.effectiveFloor);
+            updateButtonText('ineffectiveFloor', t.ineffectiveFloor);
+            updateButtonText('removeFloor', t.removeFloor);
+            
+            // 更新圖表標題
+            updateTextContent('chartTitle', t.chartTitle);
+            
+            // 更新測驗標題
+            const quizTitle = document.querySelector('.mt-8.card h2');
+            if (quizTitle) quizTitle.textContent = t.interactiveQuiz;
+            
+            // 更新說明區域
+            const conceptTitle = document.querySelector('.mt-8.card:last-child h2');
+            if (conceptTitle) conceptTitle.textContent = t.conceptTitle;
+            
+            const interactiveFeatureTitle = document.querySelector('.bg-blue-50 h3');
+            if (interactiveFeatureTitle) interactiveFeatureTitle.textContent = t.interactiveFeature;
+            
+            const interactiveDesc = document.querySelector('.bg-blue-50 p');
+            if (interactiveDesc) interactiveDesc.textContent = t.interactiveDesc;
+            
+            // 更新價格下限影響標題和列表
+            const floorTitles = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2 h3');
+            if (floorTitles[0]) floorTitles[0].textContent = t.effectiveFloorTitle;
+            if (floorTitles[1]) floorTitles[1].textContent = t.ineffectiveFloorTitle;
+            
+            const floorLists = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2 ul');
+            if (floorLists[0]) {
+                floorLists[0].innerHTML = t.effectiveFloorEffects.map(item => `<li>${item}</li>`).join('');
+            }
+            if (floorLists[1]) {
+                floorLists[1].innerHTML = t.ineffectiveFloorEffects.map(item => `<li>${item}</li>`).join('');
+            }
+            
+            // 更新問題和選項
+            updateQuestions(t.questions);
+            
+            // 更新當前語言的解釋（給測驗系統使用）
+            window.currentExplanations = t.explanations;
+            
+            // 重新繪製圖表（更新軸標籤）
+            if (window.chart) {
+                window.chart.draw();
+            }
+        }
+        
+        function updateTextContent(id, text) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = text;
+        }
+        
+        function updateButtonText(id, text) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = text;
+        }
+        
+        function updateQuestions(questions) {
+            Object.keys(questions).forEach(questionId => {
+                const questionData = questions[questionId];
+                
+                // 更新問題文本
+                const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+                if (questionElement) {
+                    questionElement.textContent = questionData.text;
+                }
+                
+                // 更新選項
+                Object.keys(questionData.options).forEach(optionKey => {
+                    const optionElement = document.querySelector(`[data-question="${questionId}"][data-answer="${optionKey}"] .option-text`);
+                    if (optionElement) {
+                        optionElement.textContent = questionData.options[optionKey];
+                    }
+                });
+            });
+        }
+
+        // 初始化應用
+        document.addEventListener('DOMContentLoaded', function() {
+            const chart = new PriceFloorChart('economicsChart');
+            window.chart = chart; // 保存圖表實例供語言切換使用
+            
+            // 語言切換按鈕事件
+            document.getElementById('langCN').addEventListener('click', () => {
+                updateLanguage('cn');
+                document.getElementById('langCN').className = 'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-primary text-white';
+                document.getElementById('langEN').className = 'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+            });
+            
+            document.getElementById('langEN').addEventListener('click', () => {
+                updateLanguage('en');
+                document.getElementById('langEN').className = 'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-primary text-white';
+                document.getElementById('langCN').className = 'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+            });
+            
+            // 按鈕事件
+            document.getElementById('effectiveFloor').addEventListener('click', () => {
+                chart.setEffectiveFloor();
+                setTimeout(() => chart.showDragTip(), 500); // 延遲0.5秒顯示提示
+            });
+            
+            document.getElementById('ineffectiveFloor').addEventListener('click', () => {
+                chart.setIneffectiveFloor();
+                setTimeout(() => chart.showDragTip(), 500); // 延遲0.5秒顯示提示
+            });
+            
+            document.getElementById('removeFloor').addEventListener('click', () => {
+                chart.removeFloor();
+            });
+            
+            // 測驗功能
+            setupQuiz();
+        });
+        
+        // 設置測驗功能
+        function setupQuiz() {
+            const quizOptions = document.querySelectorAll('.quiz-option');
+            
+            // 正確答案
+            const correctAnswers = {
+                '1': 'A', // 有效價格下限造成過剩
+                '2': 'B', // 設定在均衡價格之下時無效
+                '3': 'A', // 實際交易量由需求量決定
+                '4': 'D', // 無效價格下限時交易等於需求量、供給量、均衡數量（以上皆是）
+                '5': 'A'  // 保護生產者免受低價格影響
+            };
+            
+            // 答案解釋
+            const explanations = {
+                '1': {
+                    'A': '✅ 正確！有效的價格下限設定在均衡價格之上，會使供給量大於需求量，造成商品盈餘。',
+                    'B': '❌ 錯誤。價格下限會提高價格，導致供給過多而非短缺。',
+                    'C': '❌ 錯誤。有效的價格下限會明顯影響市場運作。',
+                    'D': '❌ 錯誤。價格下限通常會降低市場效率，造成資源配置不當。'
+                },
+                '2': {
+                    'A': '❌ 錯誤。設定在均衡價格之上的價格下限是有效的。',
+                    'B': '✅ 正確！當價格下限設定在均衡價格之下時，市場價格不會觸及下限，因此政策無效。',
+                    'C': '❌ 錯誤。設定等於均衡價格的下限處於臨界狀態。',
+                    'D': '❌ 錯誤。政府執行力度不影響下限的有效性，關鍵在於設定水準。'
+                },
+                '3': {
+                    'A': '✅ 正確！在有效價格下限下，需求量小於供給量，因此實際交易量由較小的需求量決定。',
+                    'B': '❌ 錯誤。雖然供給量較高，但實際交易受需求限制。',
+                    'C': '❌ 錯誤。政府只設定價格下限，不直接決定交易量。',
+                    'D': '❌ 錯誤。有效價格下限下無法達到原均衡數量。'
+                },
+                '4': {
+                    'A': '❌ 錯誤。在無效價格下限下，交易不僅等於需求量，也等於供給量和均衡數量。',
+                    'B': '❌ 錯誤。在無效價格下限下，交易不僅等於供給量，也等於需求量和均衡數量。',
+                    'C': '❌ 錯誤。在無效價格下限下，交易不僅等於均衡數量，也等於需求量和供給量。',
+                    'D': '✅ 正確！無效價格下限設定在均衡價格之下時，市場仍在均衡點運作，因此需求量=供給量=均衡數量，實際交易等於三者。'
+                },
+                '5': {
+                    'A': '✅ 正確！價格下限政策主要目的是保護生產者，防止價格過低，如農產品價格保護、最低工資等。',
+                    'B': '❌ 錯誤。價格下限對消費者不利，會增加他們的支出。',
+                    'C': '❌ 錯誤。價格下限不是為了增加政府收入。',
+                    'D': '❌ 錯誤。價格下限的目的不是減少競爭。'
+                }
+            };
+            
+            quizOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const question = this.dataset.question;
+                    const answer = this.dataset.answer;
+                    const feedback = document.getElementById(`feedback-${question}`);
+                    
+                    // 移除所有同組選項的選中狀態
+                    const sameGroupOptions = document.querySelectorAll(`[data-question="${question}"]`);
+                    sameGroupOptions.forEach(opt => {
+                        opt.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+                        opt.classList.remove('dark:bg-green-900/20', 'dark:bg-red-900/20');
+                        opt.classList.add('border-gray-200', 'dark:border-gray-600');
+                    });
+                    
+                    // 標記當前選項
+                    const isCorrect = answer === correctAnswers[question];
+                    if (isCorrect) {
+                        this.classList.remove('border-gray-200', 'dark:border-gray-600');
+                        this.classList.add('border-green-500', 'bg-green-50', 'dark:bg-green-900/20');
+                    } else {
+                        this.classList.remove('border-gray-200', 'dark:border-gray-600');
+                        this.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                        
+                        // 同時標記正確答案
+                        const correctOption = document.querySelector(`[data-question="${question}"][data-answer="${correctAnswers[question]}"]`);
+                        correctOption.classList.remove('border-gray-200', 'dark:border-gray-600');
+                        correctOption.classList.add('border-green-500', 'bg-green-50', 'dark:bg-green-900/20');
+                    }
+                    
+                    // 顯示反饋（使用當前語言的解釋）
+                    const currentExplanations = window.currentExplanations || explanations;
+                    feedback.className = `mt-4 p-4 rounded-lg ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700' : 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700'}`;
+                    feedback.innerHTML = `<p class="${isCorrect ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}">${currentExplanations[question][answer]}</p>`;
+                    feedback.classList.remove('hidden');
+                    
+                    // 平滑滾動到反饋
+                    feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+            });
+        }
+    </script>
+</body>
+</html>
